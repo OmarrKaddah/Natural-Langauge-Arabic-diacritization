@@ -1,0 +1,7 @@
+{
+    "python.testing.pytestArgs": [
+        "feature_extraction"
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true
+}
