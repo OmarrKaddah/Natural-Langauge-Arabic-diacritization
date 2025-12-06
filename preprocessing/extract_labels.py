@@ -74,3 +74,10 @@ def extract_chars_and_labels(sentence: str):
         labels.append(diacritics)
 
     return chars, labels
+
+
+
+sent = "الشَّهَادَةِ ظَاهِرَةً ، وَبِحَقٍّ بَيِّنٍ تَضْعُفُ التُّهْمَةُ ، وَهُوَ الْفَرْقُ بَيْنَهُ وَبَيْنَ الشَّهَادَةِ "
+chars, labels = extract_chars_and_labels(sent)
+for c, l in zip(chars, labels):
+    print(f"'{c}': '{l}'")
