@@ -7,16 +7,17 @@ def preprocess_sentence(raw_sentence: str):
       undiacritized_sentence, char_list, label_list
     """
     cleaned = clean_text(raw_sentence)
-    chars, labels = extract_chars_and_labels(cleaned)
+    undiac,chars, labels = extract_chars_and_labels(cleaned)
 
     undiac = "".join(chars)
 
-    return undiac, chars, labels
+    return chars, labels
+
 
 
 def main():
     #test
-    raw_sentence = "<p>السَّلامُ عَلَيْكُمْ! كيف حالُكَ اليوم؟</p>"
+    raw_sentence = "لَوْ جَمَعَ ثُمَّ عَلِمَ تَرْكَ رُكْنٍ مِنْ الْأُولَى بَطَلَتَا وَيُعِيدُهُمَا جَامِعًا"
     undiac, chars, labels = preprocess_sentence(raw_sentence)
     print("Undiacritized Sentence:", undiac)
     print("Characters:", chars)

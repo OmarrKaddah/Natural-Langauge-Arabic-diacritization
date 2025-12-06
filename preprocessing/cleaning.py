@@ -29,7 +29,7 @@ def clean_text(text: str) -> str:
     text = re.sub(PUNCTUATION, " ", text)
     
     # Normalize Arabic
-    text = normalize_arabic(text)
+    # text = normalize_arabic(text)
 
     # Collapse spaces
     text = re.sub(EXTRA_SPACES, " ", text).strip()
