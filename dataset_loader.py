@@ -1,68 +1,47 @@
-# dataset_loader.py
-
-import json
-from torch.utils.data import Dataset
 import torch
-from torch.nn.utils.rnn import pad_sequence
+from torch.utils.data import Dataset
 
+class CharDataset(Dataset):
+    def __init__(self, sentences, labels, vocab, max_len=200):
+        """
+        sentences: list of list of characters
+        labels: list of list of diacritics (same length as sentences)
+        vocab: StandardVocab instance
+        """
+        self.sentences = sentences
+        self.labels = labels
+        self.vocab = vocab
+        self.max_len = max_len
 
-class DiacriticsDataset(Dataset):
-    def __init__(self, json_path: str):
-        with open(json_path, "r", encoding="utf8") as f:
-            self.data = json.load(f)
+        self.PAD_CHAR = vocab.char2id["<PAD>"]
+        self.PAD_LABEL = vocab.diacritic2id[""]
 
     def __len__(self):
-        return len(self.data)
+        return len(self.sentences)
 
-    def __getitem__(self, idx: int):
-        entry = self.data[idx]
+    def _pad(self, seq, pad_value):
+        if len(seq) >= self.max_len:
+            return seq[:self.max_len]
+        return seq + [pad_value] * (self.max_len - len(seq))
 
-        char_ids = entry["char_ids"]       # list[int]
-        label_ids = entry["label_ids"]     # list[int]
-        undiac = entry["undiac"]           # string (for debugging / later)
+    def __getitem__(self, idx):
+        chars = self.sentences[idx]
+        diacs = self.labels[idx]
 
-        return {
-            "char_ids": char_ids,
-            "label_ids": label_ids,
-            "undiac": undiac,
-        }
+        # Encode
+        char_ids = self.vocab.encode_chars(chars)
+        label_ids = self.vocab.encode_diacritics(diacs)
 
+        # Pad
+        char_ids = self._pad(char_ids, self.PAD_CHAR)
+        label_ids = self._pad(label_ids, self.PAD_LABEL)
 
-def create_collate_fn(char_pad_idx: int, label_pad_idx: int):
-    """
-    Returns a collate function that:
-      - pads char & label sequences
-      - creates a mask
-      - converts to tensors
+        # Mask
+        mask = [1 if x != self.PAD_CHAR else 0 for x in char_ids]
 
-    Output:
-      char_ids: (batch, seq_len) LongTensor
-      label_ids: (batch, seq_len) LongTensor
-      mask: (batch, seq_len) BoolTensor
-      undiac: list[str] (original strings, unpadded)
-    """
-    def collate(batch):
-        # Lists of sequences
-        char_seqs = [torch.tensor(item["char_ids"], dtype=torch.long) for item in batch]
-        label_seqs = [torch.tensor(item["label_ids"], dtype=torch.long) for item in batch]
-        undiac = [item["undiac"] for item in batch]
-
-        # Pad sequences to max length in batch
-        padded_chars = pad_sequence(
-            char_seqs,
-            batch_first=True,
-            padding_value=char_pad_idx,
-        )  # (B, T)
-
-        padded_labels = pad_sequence(
-            label_seqs,
-            batch_first=True,
-            padding_value=label_pad_idx,
-        )  # (B, T)
-
-        # Mask: True where char is not PAD
-        mask = (padded_chars != char_pad_idx)
-
-        return padded_chars, padded_labels, mask, undiac
-
-    return collate
+        # Convert to tensors
+        return (
+            torch.tensor(char_ids, dtype=torch.long),
+            torch.tensor(mask, dtype=torch.long),
+            torch.tensor(label_ids, dtype=torch.long)
+        )

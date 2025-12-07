@@ -1,42 +1,52 @@
-import pickle
-from preprocessing.extract_labels import extract_chars_and_labels
-import unicodedata
+# from dataset_loader import CharDataset
+# from dataset.vocab import StandardVocab
 
-letters = pickle.load(open("dataset/arabic_letters.pickle", "rb"))
-diacritics = pickle.load(open("dataset/diacritics.pickle", "rb"))
-diacritic2id = pickle.load(open("dataset/diacritic2id.pickle", "rb"))
+# vocab = StandardVocab()
 
+# sentences = [
+#     ['ذ','ه','ب','ا','ً']
+# ]
+# labels = [
+#     ['َ','َ','َ','', 'ً']   # example labels
+# ]
+
+# dataset = CharDataset(sentences, labels, vocab, max_len=10)
+
+# char_ids, mask, label_ids = dataset[0]
+
+# print("char_ids: ", char_ids)
+# print("mask:     ", mask)
+# print("label_ids:", label_ids)
+
+import torch
+from models.bilstm import BiLSTMTagger
+from dataset.vocab import StandardVocab
+from dataset_loader import CharDataset
+
+# 1. Setup vocab
+vocab = StandardVocab()
+
+# 2. Fake tiny dataset
 sentences = [
-    "قَوْمٌ",
-    "ثُمَّ",
-    "يُصَلُّونَ",
+    ['ذ','ه','ب','ا'],
+]
+labels = [
+    ['َ','َ','َ',''],
 ]
 
-for s in sentences:
-    print("\nSentence:", s)
-    chars, labels = extract_chars_and_labels(s)
-    
+dataset = CharDataset(sentences, labels, vocab, max_len=10)
+char_ids, mask, label_ids = dataset[0]
 
-    def show_unicode(s):
-        """Return each character with its unicode codepoint."""
-        return " ".join([f"{repr(ch)}(U+{ord(ch):04X})" for ch in s])
+# Add batch dimension
+char_ids = char_ids.unsqueeze(0)  # (1, 10)
+mask = mask.unsqueeze(0)          # (1, 10)
 
+# 3. Build model
+num_chars = len(vocab.letters)
+num_labels = len(vocab.diacritic2id)
+model = BiLSTMTagger(num_chars, num_labels)
 
-    for c, d in zip(chars, labels):
+# 4. Forward pass
+logits = model(char_ids, mask)  # shape: (1, 10, num_labels)
 
-        print("\n---------------------------")
-        print(f"Character: {c}")
-        print(f"Extracted diacritic: '{d}'")
-        print("Extracted codepoints:", show_unicode(d))
-
-        found = False
-        for key in diacritic2id.keys():
-            if d == key:
-                found = True
-                print(f"  Key '{key}' → codepoints: {show_unicode(key)}")
-
-        if d not in diacritic2id:
-            print("❌ NOT IN diacritic2id")
-        else:
-            print(f"✔ ID = {diacritic2id[d]}")
-
+print("logits shape:", logits.shape)
