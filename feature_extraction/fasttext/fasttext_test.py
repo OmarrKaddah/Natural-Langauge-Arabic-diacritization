@@ -1,5 +1,5 @@
 # quick_start.py
-from fasttext import *
+from feature_extraction.fasttext.fasttext import *
 
 # 1. Load FastText (if you have the file)
 fasttext = load_fasttext_embeddings("C:/Users/ziada/Downloads/cc.ar.300.vec/cc.ar.300.vec", limit=50000)
