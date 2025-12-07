@@ -5,6 +5,7 @@ from torch.utils.data import DataLoader
 from dataset.vocab import StandardVocab
 from dataset_loader import CharDataset
 from models.bilstm_crf import BiLSTM_CRF
+from evaluate import evaluate
 
 
 from tqdm import tqdm
@@ -76,9 +77,11 @@ def main():
     print("Training BiLSTM-CRF...\n")
 
     for epoch in tqdm(range(5), desc="Epochs"):
-
         loss = train_epoch(model, train_loader, optimizer, device)
-        print(f"Epoch {epoch+1} Loss: {loss:.4f}")
+        
+        val_acc = evaluate(model, val_loader, device)
+
+        print(f"Epoch {epoch+1} | Loss: {loss:.4f} | Val Acc: {val_acc:.4f}")
     
     torch.save(model.state_dict(), "bilstm_crf_model.pth")
 
