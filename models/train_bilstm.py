@@ -17,7 +17,7 @@ def train_epoch(model, dataloader, optimizer, device):
     # Wrap dataloader with tqdm for a progress bar
     progress = tqdm(dataloader, desc="Training", leave=False)
 
-    for char_ids, mask, label_ids in progress:
+    for char_ids, mask, label_ids,undiac in progress:
         char_ids = char_ids.to(device)
         mask = mask.to(device).bool()
         label_ids = label_ids.to(device)
@@ -44,23 +44,10 @@ def main():
 
     vocab = StandardVocab()
 
-    # # Dummy small dataset for testing
-    # sentences = [
-    #     ['س','ل','ا','م'],
-    #     ['ش','ر','ب'],
-    #     ['ذ','ه','ب','ت'],
-    # ]
-    # labels = [
-    #     ['َ','َ','',''],
-    #     ['َ','َ','َ'],
-    #     ['َ','َ','َ',''],
-    # ]
 
-    # dataset = CharDataset(sentences, labels, vocab, max_len=12)
-    # dataloader = DataLoader(dataset, batch_size=2, shuffle=True)
 
-    train_dataset = RealDataset("train_processed.json", max_len=200)
-    val_dataset   = RealDataset("val_processed.json", max_len=200)
+    train_dataset = RealDataset("train_processed.json", window=60, stride=50)
+    val_dataset   = RealDataset("val_processed.json", window=60, stride=50)
 
     train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
     val_loader   = DataLoader(val_dataset, batch_size=32, shuffle=False)
@@ -73,13 +60,15 @@ def main():
     ).to(device)
 
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+    
 
     print("Training BiLSTM-CRF...\n")
 
-    for epoch in tqdm(range(5), desc="Epochs"):
+    for epoch in tqdm(range(10), desc="Epochs"):
         loss = train_epoch(model, train_loader, optimizer, device)
         
-        val_acc = evaluate(model, val_loader, device)
+        val_acc = evaluate(model,val_loader,device,vocab=vocab,dump_path=f"val_dump_epoch_{epoch+1}.txt",max_batches=10  )    # remove this to dump everything
+
 
         print(f"Epoch {epoch+1} | Loss: {loss:.4f} | Val Acc: {val_acc:.4f}")
     
