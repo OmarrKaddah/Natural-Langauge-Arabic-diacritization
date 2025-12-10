@@ -3,43 +3,59 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
-class BiLSTMTagger(nn.Module):
-    def __init__(self, vocab_size, num_labels, embed_dim=128, hidden_dim=256):
+class BiLSTM_Tagger(nn.Module):
+    def __init__(self, vocab_size, num_labels, embed_dim=128, hidden_dim=256, pad_idx=0):
         super().__init__()
 
-        # 1. Character embedding layer
+        self.pad_idx = pad_idx
+
+        # Embeddings
         self.embedding = nn.Embedding(
-            num_embeddings=vocab_size,
-            embedding_dim=embed_dim,
-            padding_idx=0   # PAD = 0
+            vocab_size,
+            embed_dim,
+            padding_idx=pad_idx
         )
 
-        # 2. BiLSTM
+        # BiLSTM
         self.lstm = nn.LSTM(
             input_size=embed_dim,
-            hidden_size=hidden_dim // 2,   # because bidirectional
+            hidden_size=hidden_dim // 2,  # half → bidirectional makes total hidden_dim
             num_layers=1,
             batch_first=True,
             bidirectional=True
         )
 
-        # 3. Linear layer (maps LSTM output → diacritic classes)
-        self.classifier = nn.Linear(hidden_dim, num_labels)
+        # Output classifier
+        self.fc = nn.Linear(hidden_dim, num_labels)
 
-    def forward(self, input_ids, mask):
+    def forward(self, char_ids, mask, label_ids=None):
         """
-        input_ids: (batch, seq_len)
-        mask:      (batch, seq_len) 1 = real token, 0 = PAD
+        char_ids : [B, T]
+        mask     : [B, T] (bool)
+        label_ids: [B, T] or None
         """
 
-        # Step A: Embeddings
-        emb = self.embedding(input_ids)        # (B, L, embed_dim)
+        emb = self.embedding(char_ids)           # [B, T, E]
+        lstm_out, _ = self.lstm(emb)             # [B, T, H]
+        logits = self.fc(lstm_out)               # [B, T, num_labels]
 
-        # Step B: LSTM
-        lstm_out, _ = self.lstm(emb)           # (B, L, hidden_dim)
+        if label_ids is None:
+            # Inference mode → return argmax predictions
+            preds = logits.argmax(dim=-1)
+            return preds
 
-        # Step C: Linear layer
-        logits = self.classifier(lstm_out)     # (B, L, num_labels)
+        # --- Loss ---
+        # Flatten everything
+        B, T, C = logits.shape
 
-        # We will handle softmax + loss outside for now
-        return logits
+        logits_flat = logits.view(B*T, C)
+        labels_flat = label_ids.view(B*T)
+        mask_flat = mask.view(B*T)
+
+        # Compute cross-entropy over non-padded positions
+        loss = F.cross_entropy(
+            logits_flat[mask_flat],
+            labels_flat[mask_flat]
+        )
+
+        return loss

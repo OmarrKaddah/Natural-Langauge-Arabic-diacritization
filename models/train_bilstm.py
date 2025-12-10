@@ -46,8 +46,8 @@ def main():
 
 
 
-    train_dataset = RealDataset("train_processed.json", window=60, stride=50)
-    val_dataset   = RealDataset("val_processed.json", window=60, stride=50)
+    train_dataset = RealDataset("train_processed.json", window=100, stride=80)
+    val_dataset   = RealDataset("val_processed.json", window=100, stride=80)
 
     train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
     val_loader   = DataLoader(val_dataset, batch_size=32, shuffle=False)
@@ -56,21 +56,29 @@ def main():
         vocab_size=len(vocab.letters),
         num_labels=len(vocab.diacritic2id),
         embed_dim=128,
-        hidden_dim=256
+        hidden_dim=384
     ).to(device)
 
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
-    
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+    optimizer,
+    mode="max",      # we want to maximize val_acc
+    factor=0.5,      # halve LR when plateau
+    patience=1,      # wait 1 epoch of no improvement
+    verbose=True,
+    min_lr=1e-5
+    )
 
     print("Training BiLSTM-CRF...\n")
 
-    for epoch in tqdm(range(10), desc="Epochs"):
+    for epoch in tqdm(range(20), desc="Epochs"):
         loss = train_epoch(model, train_loader, optimizer, device)
         
         val_acc = evaluate(model,val_loader,device,vocab=vocab,dump_path=f"val_dump_epoch_{epoch+1}.txt",max_batches=10  )    # remove this to dump everything
 
 
         print(f"Epoch {epoch+1} | Loss: {loss:.4f} | Val Acc: {val_acc:.4f}")
+        scheduler.step(val_acc) #decrease lr if no improvement for 1 epoch
     
     torch.save(model.state_dict(), "bilstm_crf_model.pth")
 

@@ -14,3 +14,17 @@ def remove_diacritics(text: str) -> str:
 def get_diacritic(char: str) -> str:
     """Return the diacritic(s) attached to a character, as a string."""
     return "".join(re.findall(DIACRITICS_PATTERN, char))
+
+AR_DIACRITICS = {"َ","ُ","ِ","ً","ٌ","ٍ","ْ","ّ"}
+
+def strip_diacritics(word):
+    """Remove Arabic diacritics."""
+    return "".join(ch for ch in word if ch not in AR_DIACRITICS)
+
+def get_last_letter(word):
+    """Return last letter (not diacritic)."""
+    for ch in reversed(word):
+        if ch not in AR_DIACRITICS:
+            return ch
+    return None
+
