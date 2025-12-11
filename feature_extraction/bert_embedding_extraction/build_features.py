@@ -1,5 +1,5 @@
-from .bert_extractor import BertFeatureExtractor
-from .merge_subwords_to_words import merge_subwords_to_words
+from feature_extraction.bert_embedding_extraction.bert_extractor import BertFeatureExtractor
+from feature_extraction.bert_embedding_extraction.merge_subwords_to_words import merge_subwords_to_words
 
 def build_word_features(sentence):
     """

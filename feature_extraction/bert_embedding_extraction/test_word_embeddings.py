@@ -1,5 +1,5 @@
-from feature_extraction.bert_embedding_extraction.load_dataset import load_train_sentences
-from feature_extraction.bert_embedding_extraction.build_features import build_word_features
+from load_dataset import load_train_sentences
+from build_features import build_word_features
 
 print("===== TESTING WORD-LEVEL BERT FROM train_processed.json =====")
 
