@@ -6,7 +6,7 @@ from tqdm import tqdm
 from scipy.sparse import hstack, csr_matrix, save_npz
 
 # 1) Classical features
-from feature_extraction.classical_features import build_all_features
+from feature_extraction.classical.build_classical_features import build_all_features
 
 # 2) BERT word-level embeddings
 from feature_extraction.bert_embedding_extraction.build_features import build_word_features
@@ -20,7 +20,7 @@ from gensim.models import KeyedVectors
 # ==========================================
 
 PREPROCESSED_PATH = "train_processed.json"
-FASTTEXT_PATH = "cc.ar.300.vec"   # 👈 change this to the *full path* of your cc.ar.300.vec
+FASTTEXT_PATH = "C:/Users/ziada/Downloads/cc.ar.300.vec/cc.ar.300.vec"   # 👈 change this to the *full path* of your cc.ar.300.vec
 ARTIFACTS_DIR = "artifacts/"      # where to save final features
 
 

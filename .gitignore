@@ -206,3 +206,6 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+artifacts/select_k_best.pkl
+artifacts/vectorizer_ngrams.pkl
+artifacts/vectorizer_tfidf.pkl

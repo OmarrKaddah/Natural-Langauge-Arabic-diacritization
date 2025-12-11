@@ -2,11 +2,11 @@
 from scipy.sparse import hstack, save_npz
 import numpy as np
 import joblib
-from data_loader import load_dataset_for_classical
-from flatten import flatten_dataset
-from tfidf_word import fit_word_tfidf, transform_word_tfidf
-from char_ngrams import fit_char_ngrams
-from scalar_features import build_scalar_features
+from feature_extraction.classical.data_loader import load_dataset_for_classical
+from feature_extraction.classical.flatten import flatten_dataset
+from feature_extraction.classical.tfidf_word import fit_word_tfidf, transform_word_tfidf
+from feature_extraction.classical.char_ngrams import fit_char_ngrams
+from feature_extraction.classical.scalar_features import build_scalar_features
 from sklearn.feature_selection import SelectKBest, chi2
 
 
